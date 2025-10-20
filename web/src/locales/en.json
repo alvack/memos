@@ -91,6 +91,13 @@
     "sign-up": "Sign up",
     "statistics": "Statistics",
     "tags": "Tags",
+    "theme": "Theme",
+    "themes": {
+      "default": "Default Light",
+      "default-dark": "Default Dark",
+      "paper": "Paper",
+      "whitewall": "Whitewall"
+    },
     "title": "Title",
     "tree-mode": "Tree mode",
     "type": "Type",

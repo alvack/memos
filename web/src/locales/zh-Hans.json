@@ -89,6 +89,13 @@
     "sign-up": "注册",
     "statistics": "统计",
     "tags": "标签",
+    "theme": "主题",
+    "themes": {
+      "default": "默认亮色",
+      "default-dark": "默认暗色",
+      "paper": "纸张",
+      "whitewall": "白墙"
+    },
     "title": "标题",
     "tree-mode": "树模式",
     "type": "类型",
