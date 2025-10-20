@@ -18,10 +18,8 @@ import MemoAttachmentListView from "./MemoAttachmentListView";
 import MemoContent from "./MemoContent";
 import MemoEditor from "./MemoEditor";
 import MemoLocationView from "./MemoLocationView";
-import MemoReactionistView from "./MemoReactionListView";
 import MemoRelationListView from "./MemoRelationListView";
 import PreviewImageDialog from "./PreviewImageDialog";
-import ReactionSelector from "./ReactionSelector";
 import UserAvatar from "./UserAvatar";
 import VisibilityIcon from "./VisibilityIcon";
 
@@ -188,7 +186,6 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
                 <TooltipContent>{t(`memo.visibility.${convertVisibilityToString(memo.visibility).toLowerCase()}` as any)}</TooltipContent>
               </Tooltip>
             )}
-            {currentUser && !isArchived && <ReactionSelector className="border-none w-auto h-auto" memo={memo} />}
           </div>
           {!isInMemoDetailPage && commentAmount > 0 && (
             <Link
@@ -244,7 +241,6 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
         {memo.location && <MemoLocationView location={memo.location} />}
         <MemoAttachmentListView attachments={memo.attachments} />
         <MemoRelationListView memo={memo} relations={referencedMemos} parentPage={parentPage} />
-        <MemoReactionistView memo={memo} reactions={memo.reactions} />
       </div>
       {nsfw && !showNSFWContent && (
         <>

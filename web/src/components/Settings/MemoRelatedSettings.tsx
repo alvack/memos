@@ -16,7 +16,6 @@ const MemoRelatedSettings = observer(() => {
   const t = useTranslate();
   const [originalSetting, setOriginalSetting] = useState<WorkspaceSetting_MemoRelatedSetting>(workspaceStore.state.memoRelatedSetting);
   const [memoRelatedSetting, setMemoRelatedSetting] = useState<WorkspaceSetting_MemoRelatedSetting>(originalSetting);
-  const [editingReaction, setEditingReaction] = useState<string>("");
   const [editingNsfwTag, setEditingNsfwTag] = useState<string>("");
 
   const updatePartialSetting = (partial: Partial<WorkspaceSetting_MemoRelatedSetting>) => {
@@ -25,15 +24,6 @@ const MemoRelatedSettings = observer(() => {
       ...partial,
     });
     setMemoRelatedSetting(newWorkspaceMemoRelatedSetting);
-  };
-
-  const upsertReaction = () => {
-    if (!editingReaction) {
-      return;
-    }
-
-    updatePartialSetting({ reactions: uniq([...memoRelatedSetting.reactions, editingReaction.trim()]) });
-    setEditingReaction("");
   };
 
   const upsertNsfwTags = () => {
@@ -46,11 +36,6 @@ const MemoRelatedSettings = observer(() => {
   };
 
   const updateSetting = async () => {
-    if (memoRelatedSetting.reactions.length === 0) {
-      toast.error("Reactions must not be empty.");
-      return;
-    }
-
     try {
       await workspaceStore.upsertWorkspaceSetting({
         name: `${workspaceSettingNamePrefix}${WorkspaceSetting_Key.MEMO_RELATED}`,
@@ -110,35 +95,6 @@ const MemoRelatedSettings = observer(() => {
           defaultValue={memoRelatedSetting.contentLengthLimit}
           onBlur={(event) => updatePartialSetting({ contentLengthLimit: Number(event.target.value) })}
         />
-      </div>
-      <div className="w-full">
-        <span className="truncate">{t("setting.memo-related-settings.reactions")}</span>
-        <div className="mt-2 w-full flex flex-row flex-wrap gap-1">
-          {memoRelatedSetting.reactions.map((reactionType) => {
-            return (
-              <Badge key={reactionType} variant="outline" className="flex items-center gap-1 h-8">
-                {reactionType}
-                <span
-                  className="cursor-pointer text-muted-foreground hover:text-primary"
-                  onClick={() => updatePartialSetting({ reactions: memoRelatedSetting.reactions.filter((r) => r !== reactionType) })}
-                >
-                  <X className="w-4 h-4" />
-                </span>
-              </Badge>
-            );
-          })}
-          <div className="flex items-center gap-1">
-            <Input
-              className="w-32"
-              placeholder={t("common.input")}
-              value={editingReaction}
-              onChange={(event) => setEditingReaction(event.target.value.trim())}
-            />
-            <span className="text-muted-foreground cursor-pointer hover:text-primary" onClick={() => upsertReaction()}>
-              <CheckIcon className="w-5 h-5" />
-            </span>
-          </div>
-        </div>
       </div>
       <div className="w-full">
         <div className="w-full flex flex-row justify-between items-center">

@@ -312,8 +312,6 @@
       "enable-link-preview": "Enable link preview",
       "enable-memo-comments": "Enable memo comments",
       "enable-memo-location": "Enable memo location",
-      "reactions": "Reactions",
-      "reacted-with": "reacted with {{reaction}}",
       "title": "Memo related settings"
     },
     "my-account": "My Account",

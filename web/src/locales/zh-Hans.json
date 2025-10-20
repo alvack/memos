@@ -311,8 +311,6 @@
       "enable-link-preview": "启用链接预览",
       "enable-memo-comments": "启用备忘录评论",
       "enable-memo-location": "启用备忘录定位",
-      "reactions": "表态",
-      "reacted-with": "用 {{reaction}} 表态了",
       "title": "备忘录相关设置"
     },
     "my-account": "我的账号",
