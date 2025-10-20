@@ -33,7 +33,7 @@ export const getSystemTheme = (): "default" | "default-dark" => {
 export const getInitialTheme = (): ValidTheme => {
   // Try to get stored theme from localStorage (where user settings might be cached)
   try {
-    const storedTheme = localStorage.getItem("memos-theme");
+    const storedTheme = localStorage.getItem("lingji-theme");
     if (storedTheme && VALID_THEMES.includes(storedTheme as ValidTheme)) {
       return storedTheme as ValidTheme;
     }
@@ -75,7 +75,7 @@ export const loadTheme = (themeName: string): void => {
 
   // Store theme preference for future loads
   try {
-    localStorage.setItem("memos-theme", validTheme);
+    localStorage.setItem("lingji-theme", validTheme);
   } catch {
     // localStorage might not be available
   }

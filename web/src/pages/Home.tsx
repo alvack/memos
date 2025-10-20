@@ -12,22 +12,11 @@ import { State } from "@/types/proto/api/v1/common";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { WorkspaceSetting_Key } from "@/types/proto/api/v1/workspace_service";
 
-// Helper function to extract shortcut ID from resource name
-// Format: users/{user}/shortcuts/{shortcut}
-const getShortcutId = (name: string): string => {
-  const parts = name.split("/");
-  return parts.length === 4 ? parts[3] : "";
-};
-
 const Home = observer(() => {
   const user = useCurrentUser();
-  const selectedShortcut = userStore.state.shortcuts.find((shortcut) => getShortcutId(shortcut.name) === memoFilterStore.shortcut);
 
   const memoFilter = useMemo(() => {
     const conditions = [`creator_id == ${extractUserIdFromName(user.name)}`];
-    if (selectedShortcut?.filter) {
-      conditions.push(selectedShortcut.filter);
-    }
     for (const filter of memoFilterStore.filters) {
       if (filter.factor === "contentSearch") {
         conditions.push(`content.contains("${filter.value}")`);
@@ -52,7 +41,7 @@ const Home = observer(() => {
       }
     }
     return conditions.length > 0 ? conditions.join(" && ") : undefined;
-  }, [memoFilterStore.filters, selectedShortcut?.filter]);
+  }, [memoFilterStore.filters]);
 
   return (
     <div className="w-full min-h-full bg-background text-foreground">

@@ -7,6 +7,7 @@ import { memoStore } from "@/store";
 import { State } from "@/types/proto/api/v1/common";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { User } from "@/types/proto/api/v1/user_service";
+import { useTranslate } from "@/utils/i18n";
 
 interface Props {
   memo: Memo;
@@ -14,23 +15,24 @@ interface Props {
   users: User[];
 }
 
-const stringifyUsers = (users: User[], reactionType: string): string => {
+const stringifyUsers = (users: User[], reactionType: string, t: (key: string, values?: Record<string, any>) => string): string => {
   if (users.length === 0) {
     return "";
   }
   if (users.length < 5) {
-    return users.map((user) => user.displayName || user.username).join(", ") + " reacted with " + reactionType.toLowerCase();
+    return users.map((user) => user.displayName || user.username).join(", ") + " " + t("common.and") + " " + t("setting.memo-related.reacted-with", { reaction: reactionType.toLowerCase() });
   }
   return (
     `${users
       .slice(0, 4)
       .map((user) => user.displayName || user.username)
-      .join(", ")} and ${users.length - 4} more reacted with ` + reactionType.toLowerCase()
+      .join(", ")} ${t("common.and")} ${users.length - 4} ${t("common.more")} ${t("setting.memo-related.reacted-with", { reaction: reactionType.toLowerCase() })}`
   );
 };
 
 const ReactionView = observer((props: Props) => {
   const { memo, reactionType, users } = props;
+  const t = useTranslate();
   const currentUser = useCurrentUser();
   const hasReaction = users.some((user) => currentUser && user.username === currentUser.username);
   const readonly = memo.state === State.ARCHIVED;
@@ -82,7 +84,7 @@ const ReactionView = observer((props: Props) => {
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{stringifyUsers(users, reactionType)}</p>
+          <p>{stringifyUsers(users, reactionType, t)}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

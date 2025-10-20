@@ -1,7 +1,7 @@
 {
   "about": {
     "blogs": "博客",
-    "description": "Memos 是一个隐私优先、轻量级的笔记解决方案，可以轻松捕捉和分享你的想法。",
+    "description": "灵记是一款隐私优先、轻量级的笔记解决方案，可以轻松捕捉和分享你的想法。",
     "documents": "文档",
     "github-repository": "GitHub 仓库",
     "official-website": "官网"
@@ -20,7 +20,10 @@
     "admin": "管理",
     "archive": "归档",
     "archived": "已归档",
+    "auto-expand": "自动展开",
     "attachments": "附件",
+    "and": "和",
+    "more": "更多",
     "avatar": "头像",
     "basic": "基础",
     "beta": "测试",
@@ -40,8 +43,7 @@
     "edit": "编辑",
     "email": "邮箱",
     "expand": "展开",
-    "explore": "发现",
-    "file": "文件",
+        "file": "文件",
     "filter": "过滤器",
     "home": "主页",
     "image": "图片",
@@ -81,8 +83,6 @@
     "select": "选择",
     "settings": "设置",
     "share": "分享",
-    "shortcut-filter": "捷径过滤器",
-    "shortcuts": "捷径",
     "sign-in": "登录",
     "sign-in-with": "使用 {{provider}} 登录",
     "sign-out": "退出登录",
@@ -143,6 +143,7 @@
     "copy-link": "复制链接",
     "count-memos-in-date": "{{date}} 有 {{count}} 条备忘录",
     "delete-confirm": "您确定要删除此条备忘录吗？（此操作不可逆）",
+    "delete-confirm-description": "此操作无法恢复。附件、链接和引用将一并被移除。",
     "direction": "排序方式",
     "direction-asc": "正序",
     "direction-desc": "倒序",
@@ -161,10 +162,9 @@
     "to-do": "待办",
     "view-detail": "查看详情",
     "visibility": {
-      "disabled": "已禁用公开备忘录",
+      "disabled": "已禁用",
       "private": "私有",
-      "protected": "工作区",
-      "public": "公开"
+      "protected": "工作区"
     },
     "list": "列表模式",
     "masonry": "瀑布流模式"
@@ -227,7 +227,9 @@
     "reset-link": "重置链接",
     "reset-link-prompt": "您确定要重置链接吗？这将导致当前使用的链接失效。（此操作不可逆）",
     "reset-resource-link": "重置资源链接",
-    "unused-resources": "未使用到的资源"
+    "unused-resources": "未使用到的资源",
+    "delete-all-unused": "删除所有未使用的文件",
+    "delete-all-unused-confirm": "您确定要删除所有未使用的文件吗？此操作无法恢复。"
   },
   "router": {
     "back-to-top": "回到顶部",
@@ -237,6 +239,8 @@
     "access-token-section": {
       "access-token-copied-to-clipboard": "访问令牌已复制到剪贴板",
       "access-token-deletion": "你确定要删除访问令牌{{accessToken}}吗？此操作不可逆。",
+      "access-token-deletion-description": "此操作无法恢复。您需要更新所有使用此令牌的服务以使用新的令牌。",
+      "access-token-deleted": "访问令牌 `{{description}}` 已删除",
       "create-dialog": {
         "create-access-token": "创建令牌",
         "created-at": "创建时间",
@@ -246,6 +250,8 @@
         "duration-never": "从不",
         "expiration": "过期时间",
         "expires-at": "过期时间",
+        "access-token-created": "访问令牌 `{{description}}` 已创建",
+        "duration-never": "永不过期",
         "some-description": "请输入描述..."
       },
       "description": "该账号下全部的访问令牌",
@@ -264,6 +270,8 @@
       "session-revocation": "您确定要撤销会话 {{sessionId}} 吗？删除后您将需要在该设备上再次登录。",
       "session-revoked": "会话已成功撤销",
       "revoke-session": "撤销会话",
+      "session-revocation-description": "您需要在该设备上重新登录。",
+      "revoke-session-button": "撤销",
       "cannot-revoke-current": "无法撤销当前会话",
       "no-sessions": "当前没有会话"
     },
@@ -286,9 +294,14 @@
       "admin": "管理员",
       "archive-member": "归档成员",
       "archive-warning": "您确定要归档 {{username}} 吗？",
+      "archive-warning-description": "归档会停用该账户。您可于日后恢复或删除该账户。",
+      "archive-success": "{{username}} 归档成功",
+      "restore-success": "{{username}} 恢复成功",
       "create-a-member": "创建成员",
       "delete-member": "删除成员",
       "delete-warning": "您确定要删除 {{username}} 吗？（此操作不可逆）",
+      "delete-warning-description": "此操作无法恢复。",
+      "delete-success": "{{username}} 删除成功",
       "user": "普通用户"
     },
     "memo-related": "备忘录",
@@ -299,6 +312,7 @@
       "enable-memo-comments": "启用备忘录评论",
       "enable-memo-location": "启用备忘录定位",
       "reactions": "表态",
+      "reacted-with": "用 {{reaction}} 表态了",
       "title": "备忘录相关设置"
     },
     "my-account": "我的账号",
@@ -330,7 +344,8 @@
       "template": "模板",
       "token-endpoint": "令牌端点（Token Endpoint）",
       "update-sso": "更新单点登录",
-      "user-endpoint": "用户端点（User Endpoint）"
+      "user-endpoint": "用户端点（User Endpoint）",
+      "single-sign-on": "设置单一登录 SSO 进行身份验证"
     },
     "storage": "存储",
     "storage-section": {
@@ -384,8 +399,7 @@
       "disable-password-login": "禁用密码登录",
       "disable-password-login-final-warning": "如果您知道自己在做什么，请输入 \"CONFIRM\"。",
       "disable-password-login-warning": "所有用户将无法使用密码登录。如果配置的身份提供程序失效，不在数据库中恢复此设置将无法登录。删除身份提供程序时也要格外小心",
-      "disable-public-memos": "禁用公开备忘录",
-      "display-with-updated-time": "根据最后修改时间顺序显示",
+            "display-with-updated-time": "根据最后修改时间顺序显示",
       "enable-auto-compact": "启用自动超长折叠显示",
       "enable-double-click-to-edit": "启用双击编辑",
       "enable-password-login": "启用密码登录",
@@ -402,9 +416,18 @@
         "create-webhook": "创建 Webhook",
         "edit-webhook": "编辑 webhook",
         "payload-url": "请输入有效的 URL",
-        "title": "标题"
+        "title": "标题",
+        "create-webhook-success": "Webhook `{{name}}` 已创建",
+        "url-example-post-receive": "https://example.com/postreceive"
       },
-      "no-webhooks-found": "没有 webhooks。"
+      "no-webhooks-found": "没有 webhooks。",
+      "title": "Webhook",
+      "url": "网址",
+      "delete-dialog": {
+        "delete-webhook-description": "此操作无法恢复。",
+        "delete-webhook-title": "您确定要删除 webhook `{{name}}` 吗？",
+        "delete-webhook-success": "Webhook `{{name}}` 删除成功"
+      }
     },
     "workspace-section": {
       "disallow-change-nickname": "禁止修改用户昵称",
@@ -415,7 +438,8 @@
       "saturday": "周六",
       "sunday": "周日",
       "week-start-day": "周开始日"
-    }
+    },
+    "version": "版本"
   },
   "tag": {
     "all-tags": "全部标签",
@@ -423,13 +447,22 @@
     "create-tags-guide": "您可以通过输入 “#标签” 创建标签。",
     "delete-confirm": "您确定要删除此标签吗?所有相关的备忘录将会被归档。",
     "delete-tag": "删除标签",
-    "new-name": "新名称",
+    "new-name": "新标签名称",
     "no-tag-found": "没找到此标签",
-    "old-name": "旧名称",
-    "rename-error-empty": "新名称不能为空或包含空格",
-    "rename-error-repeat": "新名称不能与旧名称相同",
-    "rename-success": "重命名成功",
-    "rename-tag": "重命名",
-    "rename-tip": "您的所有带有此标签的备忘录将被更新。"
+    "old-name": "旧标签名称",
+    "delete-success": "标签删除成功",
+    "rename-error-empty": "标签名称不能为空",
+    "rename-error-repeat": "标签名称已存在",
+    "rename-success": "重命名标签成功",
+    "rename-tag": "重命名标签",
+    "rename-tip": "您的标签名称将会被更新"
+  },
+  "tooltip": {
+    "link-memo": "链接备忘录",
+    "markdown-menu": "Markdown",
+    "select-location": "位置",
+    "select-visibility": "可见性",
+    "tags": "标签",
+    "upload-attachment": "上传附件"
   }
 }

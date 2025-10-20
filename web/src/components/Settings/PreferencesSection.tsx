@@ -29,7 +29,7 @@ const PreferencesSection = observer(() => {
 
   // Provide default values if setting is not loaded yet
   const setting: UserSetting_GeneralSetting = generalSetting || {
-    locale: "en",
+    locale: "zh-Hans",
     memoVisibility: "PRIVATE",
     theme: "default",
   };
@@ -60,7 +60,7 @@ const PreferencesSection = observer(() => {
             </div>
           </SelectTrigger>
           <SelectContent>
-            {[Visibility.PRIVATE, Visibility.PROTECTED, Visibility.PUBLIC]
+            {[Visibility.PRIVATE, Visibility.PROTECTED]
               .map((v) => convertVisibilityToString(v))
               .map((item) => (
                 <SelectItem key={item} value={item} className="whitespace-nowrap">

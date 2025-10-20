@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="blueGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 背景圆形 -->
+  <circle cx="256" cy="256" r="230" fill="url(#blueGradient512)" />
+
+  <!-- 灵记文字 -->
+  <text x="256" y="270"
+        font-family="'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif"
+        font-size="108"
+        font-weight="600"
+        fill="white"
+        text-anchor="middle"
+        dominant-baseline="middle">
+    灵记
+  </text>
+</svg>

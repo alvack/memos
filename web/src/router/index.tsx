@@ -9,7 +9,6 @@ import Loading from "@/pages/Loading";
 const AdminSignIn = lazy(() => import("@/pages/AdminSignIn"));
 const Archived = lazy(() => import("@/pages/Archived"));
 const AuthCallback = lazy(() => import("@/pages/AuthCallback"));
-const Explore = lazy(() => import("@/pages/Explore"));
 const Inboxes = lazy(() => import("@/pages/Inboxes"));
 const MemoDetail = lazy(() => import("@/pages/MemoDetail"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -27,7 +26,6 @@ export enum Routes {
   INBOX = "/inbox",
   ARCHIVED = "/archived",
   SETTING = "/setting",
-  EXPLORE = "/explore",
   AUTH = "/auth",
 }
 
@@ -102,15 +100,7 @@ const router = createBrowserRouter([
               },
             ],
           },
-          {
-            path: Routes.EXPLORE,
-            element: (
-              <Suspense fallback={<Loading />}>
-                <Explore />
-              </Suspense>
-            ),
-          },
-          {
+            {
             path: Routes.ATTACHMENTS,
             element: (
               <Suspense fallback={<Loading />}>

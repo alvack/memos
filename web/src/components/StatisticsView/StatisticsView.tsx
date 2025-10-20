@@ -80,13 +80,6 @@ const StatisticsView = observer(() => {
           onClick={() => handleFilterClick("property.hasTaskList")}
           tooltip={memoTypeStats.undoCount > 0 ? "Done / Total" : undefined}
         />
-
-        <StatCard
-          icon={<Code2Icon className="opacity-70" />}
-          label={t("memo.code")}
-          count={memoTypeStats.codeCount}
-          onClick={() => handleFilterClick("property.hasCode")}
-        />
       </div>
     </div>
   );

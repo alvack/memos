@@ -25,22 +25,15 @@ const LocaleSelect: FC<Props> = (props: Props) => {
       </SelectTrigger>
       <SelectContent>
         {locales.map((locale) => {
-          try {
-            const languageName = new Intl.DisplayNames([locale], { type: "language" }).of(locale);
-            if (languageName) {
-              return (
-                <SelectItem key={locale} value={locale}>
-                  {languageName.charAt(0).toUpperCase() + languageName.slice(1)}
-                </SelectItem>
-              );
-            }
-          } catch {
-            // do nth
-          }
+          const languageNames = {
+            "zh-Hans": "简体中文",
+            "zh-Hant": "繁體中文",
+            "en": "English",
+          };
 
           return (
             <SelectItem key={locale} value={locale}>
-              {locale}
+              {languageNames[locale as keyof typeof languageNames] || locale}
             </SelectItem>
           );
         })}

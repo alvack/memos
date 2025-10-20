@@ -40,7 +40,6 @@ export const stringifyFilters = (filters: MemoFilter[]): string => {
 
 class MemoFilterState {
   filters: MemoFilter[] = [];
-  shortcut?: string = undefined;
 
   constructor() {
     makeAutoObservable(this);
@@ -67,10 +66,6 @@ class MemoFilterState {
   removeFilter(filterFn: (f: MemoFilter) => boolean) {
     this.filters = this.filters.filter((f) => !filterFn(f));
   }
-
-  setShortcut(shortcut?: string) {
-    this.shortcut = shortcut;
-  }
 }
 
 const memoFilterStore = (() => {
@@ -80,13 +75,9 @@ const memoFilterStore = (() => {
     get filters() {
       return state.filters;
     },
-    get shortcut() {
-      return state.shortcut;
-    },
     getFiltersByFactor: (factor: FilterFactor) => state.getFiltersByFactor(factor),
     addFilter: (filter: MemoFilter) => state.addFilter(filter),
     removeFilter: (filterFn: (f: MemoFilter) => boolean) => state.removeFilter(filterFn),
-    setShortcut: (shortcut?: string) => state.setShortcut(shortcut),
   };
 })();
 

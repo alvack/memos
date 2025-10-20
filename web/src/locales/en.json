@@ -22,6 +22,8 @@
     "archived": "Archived",
     "attachments": "Attachments",
     "auto-expand": "Auto expand",
+    "and": "and",
+    "more": "more",
     "avatar": "Avatar",
     "basic": "Basic",
     "beta": "Beta",
@@ -41,8 +43,7 @@
     "edit": "Edit",
     "email": "Email",
     "expand": "Expand",
-    "explore": "Explore",
-    "file": "File",
+        "file": "File",
     "filter": "Filter",
     "home": "Home",
     "image": "Image",
@@ -163,10 +164,9 @@
     "to-do": "To-do",
     "view-detail": "View Detail",
     "visibility": {
-      "disabled": "Public memos are disabled",
+      "disabled": "Disabled",
       "private": "Private",
-      "protected": "Protected",
-      "public": "Public"
+      "protected": "Protected"
     },
     "list": "List",
     "masonry": "Masonry"
@@ -313,6 +313,7 @@
       "enable-memo-comments": "Enable memo comments",
       "enable-memo-location": "Enable memo location",
       "reactions": "Reactions",
+      "reacted-with": "reacted with {{reaction}}",
       "title": "Memo related settings"
     },
     "my-account": "My Account",
@@ -403,8 +404,7 @@
       "disable-password-login": "Disable password login",
       "disable-password-login-final-warning": "Please type `CONFIRM` if you know what you are doing.",
       "disable-password-login-warning": "This will disable password login for all users. It is not possible to log in without reverting this setting in the database if your configured identity providers fail. You’ll also have to be extra careful when removing an identity provider",
-      "disable-public-memos": "Disable public memos",
-      "display-with-updated-time": "Display with updated time",
+            "display-with-updated-time": "Display with updated time",
       "enable-auto-compact": "Enable auto compact",
       "enable-double-click-to-edit": "Enable double click to edit",
       "enable-password-login": "Enable password login",

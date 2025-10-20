@@ -11,7 +11,7 @@ const NavigationDrawer = observer(() => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const workspaceGeneralSetting = workspaceStore.state.generalSetting;
-  const title = workspaceGeneralSetting.customProfile?.title || "Memos";
+  const title = workspaceGeneralSetting.customProfile?.title || "灵记";
   const avatarUrl = workspaceGeneralSetting.customProfile?.logoUrl || "/full-logo.webp";
 
   useEffect(() => {

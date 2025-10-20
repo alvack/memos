@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx";
 
-const LOCAL_STORAGE_KEY = "memos-view-setting";
+const LOCAL_STORAGE_KEY = "lingji-view-setting";
 
 class LocalState {
   orderByTimeAsc: boolean = false;
