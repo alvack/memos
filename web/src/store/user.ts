@@ -281,10 +281,13 @@ const userStore = (() => {
 // or it leads to false positives
 // See: https://github.com/usememos/memos/issues/4978
 export const initialUserStore = async () => {
+  console.log("initialUserStore: Starting user store initialization");
   try {
     const { user: currentUser } = await authServiceClient.getCurrentSession({});
+    console.log("initialUserStore: Current session user:", currentUser);
     if (!currentUser) {
       // If no user is authenticated, we can skip the rest of the initialization.
+      console.log("initialUserStore: No authenticated user, skipping initialization");
       userStore.state.setPartial({
         currentUser: undefined,
         userGeneralSetting: undefined,
@@ -307,16 +310,19 @@ export const initialUserStore = async () => {
     // Apply general settings to workspace if available
     const generalSetting = userStore.state.userGeneralSetting;
     if (generalSetting) {
+      console.log("User general setting loaded:", generalSetting);
+      console.log("User locale:", generalSetting.locale);
+      console.log("Workspace locale before update:", workspaceStore.state.locale);
       workspaceStore.state.setPartial({
-        locale: generalSetting.locale,
+        locale: generalSetting.locale || workspaceStore.state.locale,
         theme: generalSetting.theme || "default",
       });
+      console.log("Workspace locale after update:", workspaceStore.state.locale);
     }
   } catch {
-    // find the nearest matched lang based on the `navigator.language` if the user is unauthenticated or settings retrieval fails.
-    const locale = findNearestMatchedLanguage(navigator.language);
+    // Always default to simplified Chinese for unauthenticated users or when settings retrieval fails.
     workspaceStore.state.setPartial({
-      locale: locale,
+      locale: "zh-Hans",
     });
   }
 };

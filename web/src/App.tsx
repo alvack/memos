@@ -50,6 +50,8 @@ const App = observer(() => {
 
   useEffect(() => {
     const currentLocale = workspaceStore.state.locale;
+    console.log("App.tsx: Changing i18n language to:", currentLocale);
+    console.log("App.tsx: i18n.language before change:", i18n.language);
     // This will trigger re-rendering of the whole app.
     i18n.changeLanguage(currentLocale);
     document.documentElement.setAttribute("lang", currentLocale);
@@ -69,7 +71,7 @@ const App = observer(() => {
       locale: userGeneralSetting.locale || workspaceStore.state.locale,
       theme: userGeneralSetting.theme || workspaceStore.state.theme,
     });
-  }, [userGeneralSetting?.locale, userGeneralSetting?.theme]);
+  }, [userGeneralSetting?.locale, userGeneralSetting?.theme, workspaceStore.state.locale, workspaceStore.state.theme]);
 
   // Load theme when workspace theme changes or user setting changes
   useEffect(() => {

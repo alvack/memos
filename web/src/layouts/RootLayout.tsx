@@ -22,19 +22,12 @@ const RootLayout = observer(() => {
 
   useEffect(() => {
     if (!currentUser) {
-      // If disallowPublicVisibility is enabled, redirect to the login page if the user is not logged in.
-      if (workspaceStore.state.memoRelatedSetting.disallowPublicVisibility) {
-        window.location.href = Routes.AUTH;
-        return;
-      } else if (
-        ([Routes.ROOT, Routes.ATTACHMENTS, Routes.INBOX, Routes.ARCHIVED, Routes.SETTING] as string[]).includes(location.pathname)
-      ) {
-        window.location.href = Routes.EXPLORE;
-        return;
-      }
+      // Redirect to login page if the user is not logged in
+      window.location.href = Routes.AUTH;
+      return;
     }
     setInitialized(true);
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     // When the route changes and there is no filter in the search params, remove all filters.

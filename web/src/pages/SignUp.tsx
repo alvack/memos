@@ -8,12 +8,14 @@ import AuthFooter from "@/components/AuthFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authServiceClient, userServiceClient } from "@/grpcweb";
+import { useTranslation } from "react-i18next";
 import useLoading from "@/hooks/useLoading";
 import useNavigateTo from "@/hooks/useNavigateTo";
-import { workspaceStore } from "@/store";
+import { userStore, workspaceStore } from "@/store";
 import { initialUserStore } from "@/store/user";
 import { User, User_Role } from "@/types/proto/api/v1/user_service";
 import { useTranslate } from "@/utils/i18n";
+import i18n from "@/i18n";
 
 const SignUp = observer(() => {
   const t = useTranslate();
@@ -58,7 +60,38 @@ const SignUp = observer(() => {
       await authServiceClient.createSession({
         passwordCredentials: { username, password },
       });
+
+      // Save user's language preference BEFORE initialUserStore loads existing settings
+      const currentLanguage = i18n.language;
+      console.log("Before initialUserStore - current language:", currentLanguage);
+
       await initialUserStore();
+
+      // Now update the user's language preference to the current interface language
+      if (userStore.state.currentUser) {
+        try {
+          console.log("Saving user language preference (current i18n.language):", currentLanguage);
+          console.log("Current workspace locale before save:", workspaceStore.state.locale);
+          console.log("Current user setting before save:", userStore.state.userGeneralSetting?.locale);
+
+          await userStore.updateUserGeneralSetting(
+            {
+              locale: currentLanguage,
+            },
+            ["locale"]
+          );
+
+          console.log("Language preference saved successfully");
+
+          // Also update workspace store to reflect the saved language immediately
+          workspaceStore.state.setPartial({ locale: currentLanguage });
+          console.log("Workspace locale updated to:", currentLanguage);
+        } catch (error) {
+          console.error("Failed to save user language preference:", error);
+          // Don't fail the signup if language setting fails
+        }
+      }
+
       navigateTo("/");
     } catch (error: any) {
       console.error(error);

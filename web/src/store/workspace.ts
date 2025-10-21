@@ -11,7 +11,7 @@ import { isValidateLocale } from "@/utils/i18n";
 import { workspaceSettingNamePrefix } from "./common";
 
 class LocalState {
-  locale: string = "en";
+  locale: string = "zh-Hans";
   theme: string = "default";
   profile: WorkspaceProfile = WorkspaceProfile.fromPartial({});
   settings: WorkspaceSetting[] = [];
@@ -40,7 +40,7 @@ class LocalState {
       ...partial,
     };
     if (!isValidateLocale(finalState.locale)) {
-      finalState.locale = "en";
+      finalState.locale = "zh-Hans";
     }
     if (!["default", "default-dark", "paper", "whitewall"].includes(finalState.theme)) {
       finalState.theme = "default";
@@ -109,11 +109,15 @@ export const initialWorkspaceStore = async () => {
   }
 
   const workspaceGeneralSetting = workspaceStore.state.generalSetting;
+  const workspaceLocale = workspaceGeneralSetting.customProfile?.locale;
+  console.log("Workspace initial setting - workspaceLocale from DB:", workspaceLocale);
+  console.log("Workspace initial setting - customProfile:", workspaceGeneralSetting.customProfile);
   workspaceStore.state.setPartial({
-    locale: workspaceGeneralSetting.customProfile?.locale,
+    locale: workspaceLocale || "zh-Hans",
     theme: "default",
     profile: workspaceProfile,
   });
+  console.log("Workspace initial setting - final locale:", workspaceStore.state.locale);
 };
 
 export default workspaceStore;
