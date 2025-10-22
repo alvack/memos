@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package memos.api.v1;
+
+import "api/v1/memo_service.proto";
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "gen/api/v1";
+
+service AIService {
+  // GenerateAISummary generates an AI summary for memos within a specified time range and tags.
+  rpc GenerateAISummary(GenerateAISummaryRequest) returns (Memo) {
+    option (google.api.http) = {
+      post: "/api/v1/ai/summaries:generate"
+      body: "*"
+    };
+  }
+
+  // TestAIConfig tests the AI configuration by sending a test request to the AI provider.
+  rpc TestAIConfig(TestAIConfigRequest) returns (TestAIConfigResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/ai/config:test"
+      body: "*"
+    };
+  }
+
+  // GetMemoSourceMemos retrieves the source memos that were used to generate an AI summary.
+  rpc GetMemoSourceMemos(GetMemoSourceMemosRequest) returns (GetMemoSourceMemosResponse) {
+    option (google.api.http) = {get: "/api/v1/{name=memos/*}/sourceMemos"};
+    option (google.api.method_signature) = "name";
+  }
+}
+
+// Request message for GenerateAISummary method.
+message GenerateAISummaryRequest {
+  // The time range for selecting source memos.
+  // Supported values: "7d", "30d", "90d", "custom"
+  // If "custom" is specified, start_date and end_date must be provided.
+  string time_range = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // Optional. Tags to filter source memos.
+  // Only memos containing these tags will be included in the summary.
+  repeated string tags = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The start date for custom time range.
+  // Format: YYYY-MM-DD
+  // Required when time_range is "custom".
+  string start_date = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The end date for custom time range.
+  // Format: YYYY-MM-DD
+  // Required when time_range is "custom".
+  string end_date = 4 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Request message for TestAIConfig method.
+message TestAIConfigRequest {
+  // This endpoint doesn't require any parameters.
+  // It will use the current workspace AI configuration.
+}
+
+// Response message for TestAIConfig method.
+message TestAIConfigResponse {
+  // Whether the AI configuration test was successful.
+  bool success = 1;
+
+  // Optional. Error message if the test failed.
+  string error_message = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Additional details about the test result.
+  string details = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Request message for GetMemoSourceMemos method.
+message GetMemoSourceMemosRequest {
+  // Required. The resource name of the AI memo.
+  // Format: memos/{memo}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "memos.api.v1/Memo"}
+  ];
+
+  // Optional. The maximum number of source memos to return.
+  // The service may return fewer than this value.
+  // If unspecified, at most 50 memos will be returned.
+  // The maximum value is 100; values above 100 will be coerced to 100.
+  int32 page_size = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. A page token, received from a previous `GetMemoSourceMemos` call.
+  // Provide this to retrieve the subsequent page.
+  string page_token = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Response message for GetMemoSourceMemos method.
+message GetMemoSourceMemosResponse {
+  // The list of source memos that were used to generate the AI summary.
+  repeated Memo memos = 1;
+
+  // A token that can be sent as `page_token` to retrieve the next page.
+  // If this field is omitted, there are no subsequent pages.
+  string next_page_token = 2;
+
+  // The total count of source memos (may be approximate).
+  int32 total_size = 3;
+}

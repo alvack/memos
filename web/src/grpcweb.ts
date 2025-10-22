@@ -1,5 +1,6 @@
 import { createChannel, createClientFactory, FetchTransport } from "nice-grpc-web";
 import { ActivityServiceDefinition } from "./types/proto/api/v1/activity_service";
+import { AIServiceDefinition } from "./types/proto/api/v1/ai_service";
 import { AttachmentServiceDefinition } from "./types/proto/api/v1/attachment_service";
 import { AuthServiceDefinition } from "./types/proto/api/v1/auth_service";
 import { IdentityProviderServiceDefinition } from "./types/proto/api/v1/idp_service";
@@ -38,3 +39,5 @@ export const activityServiceClient = clientFactory.create(ActivityServiceDefinit
 export const markdownServiceClient = clientFactory.create(MarkdownServiceDefinition, channel);
 
 export const identityProviderServiceClient = clientFactory.create(IdentityProviderServiceDefinition, channel);
+
+export const aiServiceClient = clientFactory.create(AIServiceDefinition, channel);

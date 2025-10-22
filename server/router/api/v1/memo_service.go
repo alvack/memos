@@ -325,6 +325,15 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
 	}
 
+	// Check if memo has #AI tag - AI-generated memos cannot be edited.
+	if memo.Payload != nil && len(memo.Payload.Tags) > 0 {
+		for _, tag := range memo.Payload.Tags {
+			if tag == "AI" {
+				return nil, status.Errorf(codes.PermissionDenied, "AI-generated memos cannot be edited")
+			}
+		}
+	}
+
 	update := &store.UpdateMemo{
 		ID: memo.ID,
 	}

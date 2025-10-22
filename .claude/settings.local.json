@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(go run:*)",
-      "Bash(pnpm dev:*)"
+      "Bash(pnpm dev:*)",
+      "WebSearch",
+      "mcp__context7__resolve-library-id",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

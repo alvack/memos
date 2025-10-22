@@ -380,6 +380,7 @@ message UserSetting {
     SessionsSetting sessions_setting = 3;
     AccessTokensSetting access_tokens_setting = 4;
     WebhooksSetting webhooks_setting = 5;
+    AIAutoSummarySetting ai_auto_summary_setting = 6;
   }
 
   // Enumeration of user setting keys.
@@ -393,6 +394,8 @@ message UserSetting {
     ACCESS_TOKENS = 3;
     // WEBHOOKS is the key for user webhooks.
     WEBHOOKS = 4;
+    // AI_AUTO_SUMMARY is the key for AI auto summary settings.
+    AI_AUTO_SUMMARY = 5;
   }
 
   // General user settings configuration.
@@ -423,6 +426,20 @@ message UserSetting {
   message WebhooksSetting {
     // List of user webhooks.
     repeated UserWebhook webhooks = 1;
+  }
+
+  // AI auto summary configuration.
+  message AIAutoSummarySetting {
+    // The frequency in days for automatic summary generation.
+    // Minimum value is 1 day.
+    int32 frequency_days = 1 [(google.api.field_behavior) = OPTIONAL];
+
+    // Whether automatic summary generation is enabled.
+    bool enabled = 2 [(google.api.field_behavior) = OPTIONAL];
+
+    // The count of consecutive failures.
+    // When this reaches 3, automatic summary will be disabled.
+    int32 failure_count = 3 [(google.api.field_behavior) = OPTIONAL];
   }
 }
 

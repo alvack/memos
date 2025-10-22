@@ -20,3 +20,7 @@ dist
 
 # VSCode settings
 .vscode
+/docs
+/.kiro
+/.claude
+/.claude

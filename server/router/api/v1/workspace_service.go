@@ -47,6 +47,12 @@ func (s *APIV1Service) GetWorkspaceSetting(ctx context.Context, request *v1pb.Ge
 		_, err = s.Store.GetWorkspaceMemoRelatedSetting(ctx)
 	case storepb.WorkspaceSettingKey_STORAGE:
 		_, err = s.Store.GetWorkspaceStorageSetting(ctx)
+	case storepb.WorkspaceSettingKey_AI_CONFIG:
+		// AI_CONFIG doesn't need default value initialization
+		err = nil
+	case storepb.WorkspaceSettingKey_AI_RATE_LIMIT:
+		// AI_RATE_LIMIT doesn't need default value initialization
+		err = nil
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported workspace setting key: %v", workspaceSettingKey)
 	}
@@ -119,6 +125,10 @@ func convertWorkspaceSettingFromStore(setting *storepb.WorkspaceSetting) *v1pb.W
 		workspaceSetting.Value = &v1pb.WorkspaceSetting_MemoRelatedSetting_{
 			MemoRelatedSetting: convertWorkspaceMemoRelatedSettingFromStore(setting.GetMemoRelatedSetting()),
 		}
+	case *storepb.WorkspaceSetting_AiSetting:
+		workspaceSetting.Value = &v1pb.WorkspaceSetting_AiSetting{
+			AiSetting: convertWorkspaceAISettingFromStore(setting.GetAiSetting()),
+		}
 	}
 	return workspaceSetting
 }
@@ -143,6 +153,10 @@ func convertWorkspaceSettingToStore(setting *v1pb.WorkspaceSetting) *storepb.Wor
 	case storepb.WorkspaceSettingKey_MEMO_RELATED:
 		workspaceSetting.Value = &storepb.WorkspaceSetting_MemoRelatedSetting{
 			MemoRelatedSetting: convertWorkspaceMemoRelatedSettingToStore(setting.GetMemoRelatedSetting()),
+		}
+	case storepb.WorkspaceSettingKey_AI_CONFIG:
+		workspaceSetting.Value = &storepb.WorkspaceSetting_AiSetting{
+			AiSetting: convertWorkspaceAISettingToStore(setting.GetAiSetting()),
 		}
 	default:
 		// Keep the default GeneralSetting value
@@ -281,6 +295,30 @@ func convertWorkspaceMemoRelatedSettingToStore(setting *v1pb.WorkspaceSetting_Me
 		DisableMarkdownShortcuts: setting.DisableMarkdownShortcuts,
 		EnableBlurNsfwContent:    setting.EnableBlurNsfwContent,
 		NsfwTags:                 setting.NsfwTags,
+	}
+}
+
+func convertWorkspaceAISettingFromStore(setting *storepb.WorkspaceAISetting) *v1pb.WorkspaceSetting_AISetting {
+	if setting == nil {
+		return nil
+	}
+	return &v1pb.WorkspaceSetting_AISetting{
+		Endpoint:     setting.Endpoint,
+		ApiKey:       setting.ApiKey,
+		Model:        setting.Model,
+		SystemPrompt: setting.SystemPrompt,
+	}
+}
+
+func convertWorkspaceAISettingToStore(setting *v1pb.WorkspaceSetting_AISetting) *storepb.WorkspaceAISetting {
+	if setting == nil {
+		return nil
+	}
+	return &storepb.WorkspaceAISetting{
+		Endpoint:     setting.Endpoint,
+		ApiKey:       setting.ApiKey,
+		Model:        setting.Model,
+		SystemPrompt: setting.SystemPrompt,
 	}
 }
 

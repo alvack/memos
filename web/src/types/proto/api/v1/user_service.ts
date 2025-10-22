@@ -257,6 +257,7 @@ export interface UserSetting {
   sessionsSetting?: UserSetting_SessionsSetting | undefined;
   accessTokensSetting?: UserSetting_AccessTokensSetting | undefined;
   webhooksSetting?: UserSetting_WebhooksSetting | undefined;
+  aiAutoSummarySetting?: UserSetting_AIAutoSummarySetting | undefined;
 }
 
 /** Enumeration of user setting keys. */
@@ -270,6 +271,8 @@ export enum UserSetting_Key {
   ACCESS_TOKENS = "ACCESS_TOKENS",
   /** WEBHOOKS - WEBHOOKS is the key for user webhooks. */
   WEBHOOKS = "WEBHOOKS",
+  /** AI_AUTO_SUMMARY - AI_AUTO_SUMMARY is the key for AI auto summary settings. */
+  AI_AUTO_SUMMARY = "AI_AUTO_SUMMARY",
   UNRECOGNIZED = "UNRECOGNIZED",
 }
 
@@ -290,6 +293,9 @@ export function userSetting_KeyFromJSON(object: any): UserSetting_Key {
     case 4:
     case "WEBHOOKS":
       return UserSetting_Key.WEBHOOKS;
+    case 5:
+    case "AI_AUTO_SUMMARY":
+      return UserSetting_Key.AI_AUTO_SUMMARY;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -309,6 +315,8 @@ export function userSetting_KeyToNumber(object: UserSetting_Key): number {
       return 3;
     case UserSetting_Key.WEBHOOKS:
       return 4;
+    case UserSetting_Key.AI_AUTO_SUMMARY:
+      return 5;
     case UserSetting_Key.UNRECOGNIZED:
     default:
       return -1;
@@ -345,6 +353,22 @@ export interface UserSetting_AccessTokensSetting {
 export interface UserSetting_WebhooksSetting {
   /** List of user webhooks. */
   webhooks: UserWebhook[];
+}
+
+/** AI auto summary configuration. */
+export interface UserSetting_AIAutoSummarySetting {
+  /**
+   * The frequency in days for automatic summary generation.
+   * Minimum value is 1 day.
+   */
+  frequencyDays: number;
+  /** Whether automatic summary generation is enabled. */
+  enabled: boolean;
+  /**
+   * The count of consecutive failures.
+   * When this reaches 3, automatic summary will be disabled.
+   */
+  failureCount: number;
 }
 
 export interface GetUserSettingRequest {
@@ -1616,6 +1640,7 @@ function createBaseUserSetting(): UserSetting {
     sessionsSetting: undefined,
     accessTokensSetting: undefined,
     webhooksSetting: undefined,
+    aiAutoSummarySetting: undefined,
   };
 }
 
@@ -1635,6 +1660,9 @@ export const UserSetting: MessageFns<UserSetting> = {
     }
     if (message.webhooksSetting !== undefined) {
       UserSetting_WebhooksSetting.encode(message.webhooksSetting, writer.uint32(42).fork()).join();
+    }
+    if (message.aiAutoSummarySetting !== undefined) {
+      UserSetting_AIAutoSummarySetting.encode(message.aiAutoSummarySetting, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -1686,6 +1714,14 @@ export const UserSetting: MessageFns<UserSetting> = {
           message.webhooksSetting = UserSetting_WebhooksSetting.decode(reader, reader.uint32());
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.aiAutoSummarySetting = UserSetting_AIAutoSummarySetting.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1712,6 +1748,9 @@ export const UserSetting: MessageFns<UserSetting> = {
       : undefined;
     message.webhooksSetting = (object.webhooksSetting !== undefined && object.webhooksSetting !== null)
       ? UserSetting_WebhooksSetting.fromPartial(object.webhooksSetting)
+      : undefined;
+    message.aiAutoSummarySetting = (object.aiAutoSummarySetting !== undefined && object.aiAutoSummarySetting !== null)
+      ? UserSetting_AIAutoSummarySetting.fromPartial(object.aiAutoSummarySetting)
       : undefined;
     return message;
   },
@@ -1921,6 +1960,76 @@ export const UserSetting_WebhooksSetting: MessageFns<UserSetting_WebhooksSetting
   fromPartial(object: DeepPartial<UserSetting_WebhooksSetting>): UserSetting_WebhooksSetting {
     const message = createBaseUserSetting_WebhooksSetting();
     message.webhooks = object.webhooks?.map((e) => UserWebhook.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseUserSetting_AIAutoSummarySetting(): UserSetting_AIAutoSummarySetting {
+  return { frequencyDays: 0, enabled: false, failureCount: 0 };
+}
+
+export const UserSetting_AIAutoSummarySetting: MessageFns<UserSetting_AIAutoSummarySetting> = {
+  encode(message: UserSetting_AIAutoSummarySetting, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.frequencyDays !== 0) {
+      writer.uint32(8).int32(message.frequencyDays);
+    }
+    if (message.enabled !== false) {
+      writer.uint32(16).bool(message.enabled);
+    }
+    if (message.failureCount !== 0) {
+      writer.uint32(24).int32(message.failureCount);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UserSetting_AIAutoSummarySetting {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUserSetting_AIAutoSummarySetting();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.frequencyDays = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.enabled = reader.bool();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.failureCount = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<UserSetting_AIAutoSummarySetting>): UserSetting_AIAutoSummarySetting {
+    return UserSetting_AIAutoSummarySetting.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<UserSetting_AIAutoSummarySetting>): UserSetting_AIAutoSummarySetting {
+    const message = createBaseUserSetting_AIAutoSummarySetting();
+    message.frequencyDays = object.frequencyDays ?? 0;
+    message.enabled = object.enabled ?? false;
+    message.failureCount = object.failureCount ?? 0;
     return message;
   },
 };

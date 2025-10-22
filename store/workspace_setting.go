@@ -37,6 +37,21 @@ func (s *Store) UpsertWorkspaceSetting(ctx context.Context, upsert *storepb.Work
 		valueBytes, err = protojson.Marshal(upsert.GetStorageSetting())
 	} else if upsert.Key == storepb.WorkspaceSettingKey_MEMO_RELATED {
 		valueBytes, err = protojson.Marshal(upsert.GetMemoRelatedSetting())
+	} else if upsert.Key == storepb.WorkspaceSettingKey_AI_CONFIG {
+		valueBytes, err = protojson.Marshal(upsert.GetAiSetting())
+	} else if upsert.Key == storepb.WorkspaceSettingKey_AI_RATE_LIMIT {
+		valueString := upsert.GetAiRateLimit()
+		workspaceSettingRaw.Value = valueString
+		workspaceSettingRaw, err = s.driver.UpsertWorkspaceSetting(ctx, workspaceSettingRaw)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to upsert workspace setting")
+		}
+		workspaceSetting := &storepb.WorkspaceSetting{
+			Key:   storepb.WorkspaceSettingKey_AI_RATE_LIMIT,
+			Value: &storepb.WorkspaceSetting_AiRateLimit{AiRateLimit: valueString},
+		}
+		s.workspaceSettingCache.Set(ctx, workspaceSetting.Key.String(), workspaceSetting)
+		return workspaceSetting, nil
 	} else {
 		return nil, errors.Errorf("unsupported workspace setting key: %v", upsert.Key)
 	}
@@ -237,6 +252,14 @@ func convertWorkspaceSettingFromRaw(workspaceSettingRaw *WorkspaceSetting) (*sto
 			return nil, err
 		}
 		workspaceSetting.Value = &storepb.WorkspaceSetting_MemoRelatedSetting{MemoRelatedSetting: memoRelatedSetting}
+	case storepb.WorkspaceSettingKey_AI_CONFIG.String():
+		aiSetting := &storepb.WorkspaceAISetting{}
+		if err := protojsonUnmarshaler.Unmarshal([]byte(workspaceSettingRaw.Value), aiSetting); err != nil {
+			return nil, err
+		}
+		workspaceSetting.Value = &storepb.WorkspaceSetting_AiSetting{AiSetting: aiSetting}
+	case storepb.WorkspaceSettingKey_AI_RATE_LIMIT.String():
+		workspaceSetting.Value = &storepb.WorkspaceSetting_AiRateLimit{AiRateLimit: workspaceSettingRaw.Value}
 	default:
 		// Skip unsupported workspace setting key.
 		return nil, nil
