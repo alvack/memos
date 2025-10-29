@@ -6,13 +6,9 @@ import (
 	"log/slog"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/pkg/errors"
-	"github.com/usememos/gomark"
-	"github.com/usememos/gomark/ast"
-	"github.com/usememos/gomark/renderer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -53,7 +49,7 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if len(create.Content) > contentLengthLimit {
 		return nil, status.Errorf(codes.InvalidArgument, "content too long (max %d characters)", contentLengthLimit)
 	}
-	if err := memopayload.RebuildMemoPayload(create); err != nil {
+	if err := memopayload.RebuildMemoPayload(create, s.MarkdownService); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
 	}
 	if request.Memo.Location != nil {
@@ -347,7 +343,7 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 				return nil, status.Errorf(codes.InvalidArgument, "content too long (max %d characters)", contentLengthLimit)
 			}
 			memo.Content = request.Memo.Content
-			if err := memopayload.RebuildMemoPayload(memo); err != nil {
+			if err := memopayload.RebuildMemoPayload(memo, s.MarkdownService); err != nil {
 				return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
 			}
 			update.Content = &memo.Content
@@ -720,17 +716,14 @@ func (s *APIV1Service) RenameMemoTag(ctx context.Context, request *v1pb.RenameMe
 	}
 
 	for _, memo := range memos {
-		doc, err := gomark.Parse(memo.Content)
+		// Rename tag using goldmark
+		newContent, err := s.MarkdownService.RenameTag([]byte(memo.Content), request.OldTag, request.NewTag)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to parse memo: %v", err)
+			return nil, status.Errorf(codes.Internal, "failed to rename tag: %v", err)
 		}
-		memopayload.TraverseASTDocument(doc, func(node ast.Node) {
-			if tag, ok := node.(*ast.Tag); ok && tag.Content == request.OldTag {
-				tag.Content = request.NewTag
-			}
-		})
-		memo.Content = gomark.Restore(doc)
-		if err := memopayload.RebuildMemoPayload(memo); err != nil {
+		memo.Content = newContent
+
+		if err := memopayload.RebuildMemoPayload(memo, s.MarkdownService); err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
 		}
 		if err := s.Store.UpdateMemo(ctx, &store.UpdateMemo{
@@ -851,63 +844,65 @@ func convertMemoToWebhookPayload(memo *v1pb.Memo) (*webhook.WebhookRequestPayloa
 	}, nil
 }
 
-func getMemoContentSnippet(content string) (string, error) {
-	doc, err := gomark.Parse(content)
+func (s *APIV1Service) getMemoContentSnippet(content string) (string, error) {
+	// Use goldmark service for snippet generation
+	snippet, err := s.MarkdownService.GenerateSnippet([]byte(content), 64)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to parse content")
+		return "", errors.Wrap(err, "failed to generate snippet")
 	}
-
-	plainText := renderer.NewStringRenderer().RenderDocument(doc)
-	if len(plainText) > 64 {
-		return substring(plainText, 64) + "...", nil
-	}
-	return plainText, nil
-}
-
-func substring(s string, length int) string {
-	if length <= 0 {
-		return ""
-	}
-
-	runeCount := 0
-	byteIndex := 0
-	for byteIndex < len(s) {
-		_, size := utf8.DecodeRuneInString(s[byteIndex:])
-		byteIndex += size
-		runeCount++
-		if runeCount == length {
-			break
-		}
-	}
-
-	return s[:byteIndex]
+	return snippet, nil
 }
 
 // parseMemoOrderBy parses the order_by field and sets the appropriate ordering in memoFind.
+// Follows AIP-132: supports comma-separated list of fields with optional "desc" suffix.
+// Example: "pinned desc, display_time desc" or "create_time asc".
 func (*APIV1Service) parseMemoOrderBy(orderBy string, memoFind *store.FindMemo) error {
-	// Parse order_by field like "display_time desc" or "create_time asc"
-	parts := strings.Fields(strings.TrimSpace(orderBy))
-	if len(parts) == 0 {
+	if strings.TrimSpace(orderBy) == "" {
 		return errors.New("empty order_by")
 	}
 
-	field := parts[0]
-	direction := "desc" // default
-	if len(parts) > 1 {
-		direction = strings.ToLower(parts[1])
-		if direction != "asc" && direction != "desc" {
-			return errors.Errorf("invalid order direction: %s, must be 'asc' or 'desc'", parts[1])
+	// Split by comma to support multiple sort fields per AIP-132.
+	fields := strings.Split(orderBy, ",")
+
+	// Track if we've seen pinned field.
+	hasPinned := false
+
+	for _, field := range fields {
+		parts := strings.Fields(strings.TrimSpace(field))
+		if len(parts) == 0 {
+			continue
+		}
+
+		fieldName := parts[0]
+		fieldDirection := "desc" // default per AIP-132 (we use desc as default for time fields)
+		if len(parts) > 1 {
+			fieldDirection = strings.ToLower(parts[1])
+			if fieldDirection != "asc" && fieldDirection != "desc" {
+				return errors.Errorf("invalid order direction: %s, must be 'asc' or 'desc'", parts[1])
+			}
+		}
+
+		switch fieldName {
+		case "pinned":
+			hasPinned = true
+			memoFind.OrderByPinned = true
+			// Note: pinned is always DESC (true first) regardless of direction specified.
+		case "display_time", "create_time", "name":
+			// Only set if this is the first time field we encounter.
+			if !memoFind.OrderByUpdatedTs {
+				memoFind.OrderByTimeAsc = fieldDirection == "asc"
+			}
+		case "update_time":
+			memoFind.OrderByUpdatedTs = true
+			memoFind.OrderByTimeAsc = fieldDirection == "asc"
+		default:
+			return errors.Errorf("unsupported order field: %s, supported fields are: pinned, display_time, create_time, update_time, name", fieldName)
 		}
 	}
 
-	switch field {
-	case "display_time", "create_time", "name":
-		memoFind.OrderByTimeAsc = direction == "asc"
-	case "update_time":
-		memoFind.OrderByUpdatedTs = true
-		memoFind.OrderByTimeAsc = direction == "asc"
-	default:
-		return errors.Errorf("unsupported order field: %s, supported fields are: display_time, create_time, update_time, name", field)
+	// If only pinned was specified, still need to set a default time ordering.
+	if hasPinned && !memoFind.OrderByUpdatedTs && len(fields) == 1 {
+		memoFind.OrderByTimeAsc = false // default to desc
 	}
 
 	return nil

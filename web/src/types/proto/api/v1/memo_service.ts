@@ -11,7 +11,6 @@ import { FieldMask } from "../../google/protobuf/field_mask";
 import { Timestamp } from "../../google/protobuf/timestamp";
 import { Attachment } from "./attachment_service";
 import { State, stateFromJSON, stateToNumber } from "./common";
-import { Node } from "./markdown_service";
 
 export const protobufPackage = "memos.api.v1";
 
@@ -110,8 +109,6 @@ export interface Memo {
     | undefined;
   /** Required. The content of the memo in Markdown format. */
   content: string;
-  /** Output only. The parsed nodes from the content. */
-  nodes: Node[];
   /** The visibility of the memo. */
   visibility: Visibility;
   /** Output only. The tags extracted from the content. */
@@ -195,7 +192,9 @@ export interface ListMemosRequest {
   /**
    * Optional. The order to sort results by.
    * Default to "display_time desc".
-   * Example: "display_time desc" or "create_time asc"
+   * Supports comma-separated list of fields following AIP-132.
+   * Example: "pinned desc, display_time desc" or "create_time asc"
+   * Supported fields: pinned, display_time, create_time, update_time, name
    */
   orderBy: string;
   /**
@@ -585,7 +584,6 @@ function createBaseMemo(): Memo {
     updateTime: undefined,
     displayTime: undefined,
     content: "",
-    nodes: [],
     visibility: Visibility.VISIBILITY_UNSPECIFIED,
     tags: [],
     pinned: false,
@@ -621,9 +619,6 @@ export const Memo: MessageFns<Memo> = {
     }
     if (message.content !== "") {
       writer.uint32(58).string(message.content);
-    }
-    for (const v of message.nodes) {
-      Node.encode(v!, writer.uint32(66).fork()).join();
     }
     if (message.visibility !== Visibility.VISIBILITY_UNSPECIFIED) {
       writer.uint32(72).int32(visibilityToNumber(message.visibility));
@@ -719,14 +714,6 @@ export const Memo: MessageFns<Memo> = {
           }
 
           message.content = reader.string();
-          continue;
-        }
-        case 8: {
-          if (tag !== 66) {
-            break;
-          }
-
-          message.nodes.push(Node.decode(reader, reader.uint32()));
           continue;
         }
         case 9: {
@@ -830,7 +817,6 @@ export const Memo: MessageFns<Memo> = {
     message.updateTime = object.updateTime ?? undefined;
     message.displayTime = object.displayTime ?? undefined;
     message.content = object.content ?? "";
-    message.nodes = object.nodes?.map((e) => Node.fromPartial(e)) || [];
     message.visibility = object.visibility ?? Visibility.VISIBILITY_UNSPECIFIED;
     message.tags = object.tags?.map((e) => e) || [];
     message.pinned = object.pinned ?? false;

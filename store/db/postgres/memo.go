@@ -53,26 +53,22 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 	}
 	if len(find.IDList) > 0 {
 		holders := make([]string, 0, len(find.IDList))
-		for range find.IDList {
-			holders = append(holders, placeholder(len(args)+1))
-		}
-		where = append(where, "memo.id IN ("+strings.Join(holders, ", ")+")")
 		for _, id := range find.IDList {
+			holders = append(holders, placeholder(len(args)+1))
 			args = append(args, id)
 		}
+		where = append(where, "memo.id IN ("+strings.Join(holders, ", ")+")")
 	}
 	if v := find.UID; v != nil {
 		where, args = append(where, "memo.uid = "+placeholder(len(args)+1)), append(args, *v)
 	}
 	if len(find.UIDList) > 0 {
 		holders := make([]string, 0, len(find.UIDList))
-		for range find.UIDList {
-			holders = append(holders, placeholder(len(args)+1))
-		}
-		where = append(where, "memo.uid IN ("+strings.Join(holders, ", ")+")")
 		for _, uid := range find.UIDList {
+			holders = append(holders, placeholder(len(args)+1))
 			args = append(args, uid)
 		}
+		where = append(where, "memo.uid IN ("+strings.Join(holders, ", ")+")")
 	}
 	if v := find.CreatorID; v != nil {
 		where, args = append(where, "memo.creator_id = "+placeholder(len(args)+1)), append(args, *v)
@@ -97,11 +93,16 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		order = "ASC"
 	}
 	orderBy := []string{}
+	if find.OrderByPinned {
+		orderBy = append(orderBy, "pinned DESC")
+	}
 	if find.OrderByUpdatedTs {
 		orderBy = append(orderBy, "updated_ts "+order)
 	} else {
 		orderBy = append(orderBy, "created_ts "+order)
 	}
+	// Add id as final tie-breaker
+	orderBy = append(orderBy, "id DESC")
 	fields := []string{
 		`memo.id AS id`,
 		`memo.uid AS uid`,

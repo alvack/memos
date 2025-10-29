@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import { observer } from "mobx-react-lite";
-import { useMemo } from "react";
 import { MemoRenderContext } from "@/components/MasonryView";
 import MemoView from "@/components/MemoView";
 import PagedMemoList from "@/components/PagedMemoList";
@@ -15,7 +14,8 @@ import { WorkspaceSetting_Key } from "@/types/proto/api/v1/workspace_service";
 const Home = observer(() => {
   const user = useCurrentUser();
 
-  const memoFilter = useMemo(() => {
+  // Build filter from active filters - no useMemo needed since component is MobX observer
+  const buildMemoFilter = () => {
     const conditions = [`creator_id == ${extractUserIdFromName(user.name)}`];
     for (const filter of memoFilterStore.filters) {
       if (filter.factor === "contentSearch") {
@@ -52,13 +52,18 @@ const Home = observer(() => {
         listSort={(memos: Memo[]) =>
           memos
             .filter((memo) => memo.state === State.NORMAL)
-            .sort((a, b) =>
-              viewStore.state.orderByTimeAsc
+            .sort((a, b) => {
+              // First, sort by pinned status (pinned memos first)
+              if (a.pinned !== b.pinned) {
+                return b.pinned ? 1 : -1;
+              }
+              // Then sort by display time
+              return viewStore.state.orderByTimeAsc
                 ? dayjs(a.displayTime).unix() - dayjs(b.displayTime).unix()
-                : dayjs(b.displayTime).unix() - dayjs(a.displayTime).unix(),
-            )
+                : dayjs(b.displayTime).unix() - dayjs(a.displayTime).unix();
+            })
         }
-        orderBy={viewStore.state.orderByTimeAsc ? "display_time asc" : "display_time desc"}
+        orderBy={viewStore.state.orderByTimeAsc ? "pinned desc, display_time asc" : "pinned desc, display_time desc"}
         filter={memoFilter}
       />
     </div>

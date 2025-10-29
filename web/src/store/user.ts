@@ -1,7 +1,8 @@
 import { uniqueId } from "lodash-es";
-import { makeAutoObservable } from "mobx";
-import { authServiceClient, inboxServiceClient, userServiceClient } from "@/grpcweb";
+import { makeAutoObservable, computed } from "mobx";
+import { authServiceClient, inboxServiceClient, userServiceClient, shortcutServiceClient } from "@/grpcweb";
 import { Inbox } from "@/types/proto/api/v1/inbox_service";
+import { Shortcut } from "@/types/proto/api/v1/shortcut_service";
 import {
   User,
   UserSetting,
@@ -13,6 +14,7 @@ import {
   UserStats,
 } from "@/types/proto/api/v1/user_service";
 import { findNearestMatchedLanguage } from "@/utils/i18n";
+import { RequestDeduplicator, createRequestKey, StoreError } from "./store-utils";
 import workspaceStore from "./workspace";
 
 class LocalState {
@@ -21,6 +23,7 @@ class LocalState {
   userSessionsSetting?: UserSetting_SessionsSetting;
   userAccessTokensSetting?: UserSetting_AccessTokensSetting;
   userWebhooksSetting?: UserSetting_WebhooksSetting;
+  shortcuts: Shortcut[] = [];
   inboxes: Inbox[] = [];
   userMapByName: Record<string, User> = {};
   userStatsByName: Record<string, UserStats> = {};
@@ -28,14 +31,21 @@ class LocalState {
   // The state id of user stats map.
   statsStateId = uniqueId();
 
+  /**
+   * Computed property that aggregates tag counts across all users.
+   * Uses @computed to memoize the result and only recalculate when userStatsByName changes.
+   * This prevents unnecessary recalculations on every access.
+   */
   get tagCount() {
-    const tagCount: Record<string, number> = {};
-    for (const stats of Object.values(this.userStatsByName)) {
-      for (const tag of Object.keys(stats.tagCount)) {
-        tagCount[tag] = (tagCount[tag] || 0) + stats.tagCount[tag];
+    return computed(() => {
+      const tagCount: Record<string, number> = {};
+      for (const stats of Object.values(this.userStatsByName)) {
+        for (const tag of Object.keys(stats.tagCount)) {
+          tagCount[tag] = (tagCount[tag] || 0) + stats.tagCount[tag];
+        }
       }
-    }
-    return tagCount;
+      return tagCount;
+    }).get();
   }
 
   get currentUserStats() {
@@ -56,6 +66,7 @@ class LocalState {
 
 const userStore = (() => {
   const state = new LocalState();
+  const deduplicator = new RequestDeduplicator();
 
   const getOrFetchUserByName = async (name: string) => {
     const userMap = state.userMapByName;
@@ -81,12 +92,10 @@ const userStore = (() => {
         return userMap[name];
       }
     }
-    // Use search instead of the deprecated getUserByUsername
-    const { users } = await userServiceClient.listUsers({
-      filter: `username == "${username}"`,
-      pageSize: 10,
+    // Use GetUser with username - supports both "users/{id}" and "users/{username}"
+    const user = await userServiceClient.getUser({
+      name: `users/${username}`,
     });
-    const user = users.find((u) => u.username === username);
     if (!user) {
       throw new Error(`User with username ${username} not found`);
     }
@@ -104,15 +113,22 @@ const userStore = (() => {
   };
 
   const fetchUsers = async () => {
-    const { users } = await userServiceClient.listUsers({});
-    const userMap = state.userMapByName;
-    for (const user of users) {
-      userMap[user.name] = user;
-    }
-    state.setPartial({
-      userMapByName: userMap,
+    const requestKey = createRequestKey("fetchUsers");
+    return deduplicator.execute(requestKey, async () => {
+      try {
+        const { users } = await userServiceClient.listUsers({});
+        const userMap = state.userMapByName;
+        for (const user of users) {
+          userMap[user.name] = user;
+        }
+        state.setPartial({
+          userMapByName: userMap,
+        });
+        return users;
+      } catch (error) {
+        throw StoreError.wrap("FETCH_USERS_FAILED", error);
+      }
     });
-    return users;
   };
 
   const updateUser = async (user: Partial<User>, updateMask: string[]) => {
@@ -178,8 +194,12 @@ const userStore = (() => {
       return;
     }
 
-    const { settings } = await userServiceClient.listUserSettings({ parent: state.currentUser });
-    
+    // Fetch settings and shortcuts in parallel for better performance
+    const [{ settings }, { shortcuts }] = await Promise.all([
+      userServiceClient.listUserSettings({ parent: state.currentUser }),
+      shortcutServiceClient.listShortcuts({ parent: state.currentUser }),
+    ]);
+
     // Extract and store each setting type
     const generalSetting = settings.find((s) => s.generalSetting)?.generalSetting;
     const sessionsSetting = settings.find((s) => s.sessionsSetting)?.sessionsSetting;
@@ -191,6 +211,7 @@ const userStore = (() => {
       userSessionsSetting: sessionsSetting,
       userAccessTokensSetting: accessTokensSetting,
       userWebhooksSetting: webhooksSetting,
+      shortcuts: shortcuts,
     });
   };
 
@@ -235,21 +256,28 @@ const userStore = (() => {
   };
 
   const fetchUserStats = async (user?: string) => {
-    const userStatsByName: Record<string, UserStats> = {};
-    if (!user) {
-      const { stats } = await userServiceClient.listAllUserStats({});
-      for (const userStats of stats) {
-        userStatsByName[userStats.name] = userStats;
+    const requestKey = createRequestKey("fetchUserStats", { user });
+    return deduplicator.execute(requestKey, async () => {
+      try {
+        const userStatsByName: Record<string, UserStats> = {};
+        if (!user) {
+          const { stats } = await userServiceClient.listAllUserStats({});
+          for (const userStats of stats) {
+            userStatsByName[userStats.name] = userStats;
+          }
+        } else {
+          const userStats = await userServiceClient.getUserStats({ name: user });
+          userStatsByName[user] = userStats;
+        }
+        state.setPartial({
+          userStatsByName: {
+            ...state.userStatsByName,
+            ...userStatsByName,
+          },
+        });
+      } catch (error) {
+        throw StoreError.wrap("FETCH_USER_STATS_FAILED", error);
       }
-    } else {
-      const userStats = await userServiceClient.getUserStats({ name: user });
-      userStatsByName[user] = userStats;
-    }
-    state.setPartial({
-      userStatsByName: {
-        ...state.userStatsByName,
-        ...userStatsByName,
-      },
     });
   };
 
@@ -276,26 +304,38 @@ const userStore = (() => {
   };
 })();
 
-// TODO: refactor initialUserStore as it has temporal coupling
-// need to make it more clear that the order of the body is important
-// or it leads to false positives
-// See: https://github.com/usememos/memos/issues/4978
+/**
+ * Initializes the user store with proper sequencing to avoid temporal coupling.
+ *
+ * Initialization steps (order is critical):
+ * 1. Fetch current authenticated user session
+ * 2. Set current user in store (required for subsequent calls)
+ * 3. Fetch user settings (depends on currentUser being set)
+ * 4. Apply user preferences to workspace store
+ *
+ * @throws Never - errors are handled internally with fallback behavior
+ */
 export const initialUserStore = async () => {
-  console.log("initialUserStore: Starting user store initialization");
   try {
+    // Step 1: Authenticate and get current user
     const { user: currentUser } = await authServiceClient.getCurrentSession({});
-    console.log("initialUserStore: Current session user:", currentUser);
+
     if (!currentUser) {
-      // If no user is authenticated, we can skip the rest of the initialization.
-      console.log("initialUserStore: No authenticated user, skipping initialization");
+      // No authenticated user - clear state and use default locale
       userStore.state.setPartial({
         currentUser: undefined,
         userGeneralSetting: undefined,
         userMapByName: {},
       });
+
+      const locale = findNearestMatchedLanguage(navigator.language);
+      workspaceStore.state.setPartial({ locale });
       return;
     }
 
+    // Step 2: Set current user in store
+    // CRITICAL: This must happen before fetchUserSettings() is called
+    // because fetchUserSettings() depends on state.currentUser being set
     userStore.state.setPartial({
       currentUser: currentUser.name,
       userMapByName: {
@@ -303,27 +343,31 @@ export const initialUserStore = async () => {
       },
     });
 
-    // must be called after user is set in store
+    // Step 3: Fetch user settings
+    // CRITICAL: This must happen after currentUser is set in step 2
+    // The fetchUserSettings() method checks state.currentUser internally
     await userStore.fetchUserSettings();
 
-    // must be run after fetchUserSettings is called.
-    // Apply general settings to workspace if available
+    // Step 4: Apply user preferences to workspace
+    // CRITICAL: This must happen after fetchUserSettings() completes
+    // We need userGeneralSetting to be populated before accessing it
     const generalSetting = userStore.state.userGeneralSetting;
     if (generalSetting) {
-      console.log("User general setting loaded:", generalSetting);
-      console.log("User locale:", generalSetting.locale);
-      console.log("Workspace locale before update:", workspaceStore.state.locale);
+      // Note: setPartial will validate theme automatically
       workspaceStore.state.setPartial({
-        locale: generalSetting.locale || workspaceStore.state.locale,
-        theme: generalSetting.theme || "default",
+        locale: generalSetting.locale,
+        theme: generalSetting.theme || "default", // Validation handled by setPartial
       });
-      console.log("Workspace locale after update:", workspaceStore.state.locale);
+    } else {
+      // Fallback if settings weren't loaded
+      const locale = findNearestMatchedLanguage(navigator.language);
+      workspaceStore.state.setPartial({ locale });
     }
-  } catch {
-    // Always default to simplified Chinese for unauthenticated users or when settings retrieval fails.
-    workspaceStore.state.setPartial({
-      locale: "zh-Hans",
-    });
+  } catch (error) {
+    // On any error, fall back to browser language detection
+    console.error("Failed to initialize user store:", error);
+    const locale = findNearestMatchedLanguage(navigator.language);
+    workspaceStore.state.setPartial({ locale });
   }
 };
 

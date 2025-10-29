@@ -81,6 +81,13 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
     const targetEl = e.target as HTMLElement;
 
     if (targetEl.tagName === "IMG") {
+      // Check if the image is inside a link
+      const linkElement = targetEl.closest("a");
+      if (linkElement) {
+        // If image is inside a link, only navigate to the link (don't show preview)
+        return;
+      }
+
       const imgUrl = targetEl.getAttribute("src");
       if (imgUrl) {
         setPreviewImage({ open: true, urls: [imgUrl], index: 0 });
@@ -134,7 +141,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
   ) : (
     <div
       className={cn(
-        "relative flex flex-col justify-start items-start bg-card w-full px-4 py-3 mb-2 gap-2 text-card-foreground rounded-lg border border-border transition-colors",
+        "relative group flex flex-col justify-start items-start bg-card w-full px-4 py-3 mb-2 gap-2 text-card-foreground rounded-lg border border-border transition-colors",
         className,
       )}
     >
@@ -175,21 +182,9 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
           )}
         </div>
         <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
-          <div className="w-auto flex flex-row justify-between items-center gap-2">
-            {props.showVisibility && memo.visibility !== Visibility.PRIVATE && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <span className="flex justify-center items-center rounded-md p-1 hover:opacity-80">
-                    <VisibilityIcon visibility={memo.visibility} />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>{t(`memo.visibility.${convertVisibilityToString(memo.visibility).toLowerCase()}` as any)}</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
           {!isInMemoDetailPage && commentAmount > 0 && (
             <Link
-              className={cn("flex flex-row justify-start items-center rounded-md p-1 hover:opacity-80", commentAmount === 0 && "invisible")}
+              className="flex flex-row justify-start items-center rounded-md p-1 hover:opacity-80"
               to={`/${memo.name}#comments`}
               viewTransition
               state={{
@@ -199,6 +194,25 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
               <MessageCircleMoreIcon className="w-4 h-4 mx-auto text-muted-foreground" />
               {commentAmount > 0 && <span className="text-xs text-muted-foreground">{commentAmount}</span>}
             </Link>
+          )}
+          {props.showVisibility && memo.visibility !== Visibility.PRIVATE && (
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="flex justify-center items-center rounded-md p-1 hover:opacity-80">
+                  <VisibilityIcon visibility={memo.visibility} />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{t(`memo.visibility.${convertVisibilityToString(memo.visibility).toLowerCase()}` as any)}</TooltipContent>
+            </Tooltip>
+          )}
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="flex justify-center items-center rounded-md hover:opacity-80">
+                  <VisibilityIcon visibility={memo.visibility} />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{t(`memo.visibility.${convertVisibilityToString(memo.visibility).toLowerCase()}` as any)}</TooltipContent>
+            </Tooltip>
           )}
           {props.showPinned && memo.pinned && (
             <TooltipProvider>
@@ -231,7 +245,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
         <MemoContent
           key={`${memo.name}-${memo.updateTime}`}
           memoName={memo.name}
-          nodes={memo.nodes}
+          content={memo.content}
           readonly={readonly}
           onClick={handleMemoContentClick}
           onDoubleClick={handleMemoContentDoubleClick}

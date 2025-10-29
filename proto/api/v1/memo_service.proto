@@ -4,7 +4,6 @@ package memos.api.v1;
 
 import "api/v1/attachment_service.proto";
 import "api/v1/common.proto";
-import "api/v1/markdown_service.proto";
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
@@ -202,9 +201,6 @@ message Memo {
   // Required. The content of the memo in Markdown format.
   string content = 7 [(google.api.field_behavior) = REQUIRED];
 
-  // Output only. The parsed nodes from the content.
-  repeated Node nodes = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
-
   // The visibility of the memo.
   Visibility visibility = 9 [(google.api.field_behavior) = REQUIRED];
 
@@ -291,7 +287,9 @@ message ListMemosRequest {
 
   // Optional. The order to sort results by.
   // Default to "display_time desc".
-  // Example: "display_time desc" or "create_time asc"
+  // Supports comma-separated list of fields following AIP-132.
+  // Example: "pinned desc, display_time desc" or "create_time asc"
+  // Supported fields: pinned, display_time, create_time, update_time, name
   string order_by = 4 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Filter to apply to the list results.

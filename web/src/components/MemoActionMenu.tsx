@@ -6,6 +6,8 @@ import {
   BookmarkPlusIcon,
   CopyIcon,
   Edit3Icon,
+  FileTextIcon,
+  LinkIcon,
   MoreVerticalIcon,
   TrashIcon,
   SquareCheckIcon,
@@ -15,16 +17,23 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { markdownServiceClient } from "@/grpcweb";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import { memoStore, userStore } from "@/store";
 import { workspaceStore } from "@/store";
 import { State } from "@/types/proto/api/v1/common";
-import { NodeType } from "@/types/proto/api/v1/markdown_service";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
+import { hasCompletedTasks, removeCompletedTasks } from "@/utils/markdown-manipulation";
 import { Button } from "./ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface Props {
   memo: Memo;
@@ -34,16 +43,7 @@ interface Props {
 }
 
 const checkHasCompletedTaskList = (memo: Memo) => {
-  for (const node of memo.nodes) {
-    if (node.type === NodeType.LIST && node.listNode?.children && node.listNode?.children?.length > 0) {
-      for (let j = 0; j < node.listNode.children.length; j++) {
-        if (node.listNode.children[j].type === NodeType.TASK_LIST_ITEM && node.listNode.children[j].taskListItemNode?.complete) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
+  return hasCompletedTasks(memo.content);
 };
 
 const MemoActionMenu = observer((props: Props) => {
@@ -127,6 +127,11 @@ const MemoActionMenu = observer((props: Props) => {
     toast.success(t("message.succeed-copy-link"));
   };
 
+  const handleCopyContent = () => {
+    copy(memo.content);
+    toast.success(t("message.succeed-copy-content"));
+  };
+
   const handleDeleteMemoClick = () => {
     setDeleteDialogOpen(true);
   };
@@ -145,27 +150,11 @@ const MemoActionMenu = observer((props: Props) => {
   };
 
   const confirmRemoveCompletedTaskListItems = async () => {
-    const newNodes = JSON.parse(JSON.stringify(memo.nodes));
-    for (const node of newNodes) {
-      if (node.type === NodeType.LIST && node.listNode?.children?.length > 0) {
-        const children = node.listNode.children;
-        for (let i = 0; i < children.length; i++) {
-          if (children[i].type === NodeType.TASK_LIST_ITEM && children[i].taskListItemNode?.complete) {
-            // Remove completed taskList item and next line breaks
-            children.splice(i, 1);
-            if (children[i]?.type === NodeType.LINE_BREAK) {
-              children.splice(i, 1);
-            }
-            i--;
-          }
-        }
-      }
-    }
-    const { markdown } = await markdownServiceClient.restoreMarkdownNodes({ nodes: newNodes });
+    const newContent = removeCompletedTasks(memo.content);
     await memoStore.updateMemo(
       {
         name: memo.name,
-        content: markdown,
+        content: newContent,
       },
       ["content"],
     );
@@ -196,10 +185,22 @@ const MemoActionMenu = observer((props: Props) => {
           </>
         )}
         {!isArchived && (
-          <DropdownMenuItem onClick={handleCopyLink}>
-            <CopyIcon className="w-4 h-auto" />
-            {t("memo.copy-link")}
-          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <CopyIcon className="w-4 h-auto" />
+              {t("common.copy")}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={handleCopyLink}>
+                <LinkIcon className="w-4 h-auto" />
+                {t("memo.copy-link")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCopyContent}>
+                <FileTextIcon className="w-4 h-auto" />
+                {t("memo.copy-content")}
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
         )}
         {!readonly && (
           <>

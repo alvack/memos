@@ -2,7 +2,7 @@ import copy from "copy-to-clipboard";
 import dayjs from "dayjs";
 import { ExternalLinkIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { MemoRenderContext } from "@/components/MasonryView";
@@ -43,7 +43,8 @@ const UserProfile = observer(() => {
       });
   }, [params.username]);
 
-  const memoFilter = useMemo(() => {
+  // Build filter from active filters - no useMemo needed since component is MobX observer
+  const buildMemoFilter = () => {
     if (!user) {
       return undefined;
     }
@@ -57,7 +58,9 @@ const UserProfile = observer(() => {
       }
     }
     return conditions.length > 0 ? conditions.join(" && ") : undefined;
-  }, [user, memoFilterStore.filters]);
+  };
+
+  const memoFilter = buildMemoFilter();
 
   const handleCopyProfileLink = () => {
     if (!user) {
@@ -95,13 +98,18 @@ const UserProfile = observer(() => {
                 listSort={(memos: Memo[]) =>
                   memos
                     .filter((memo) => memo.state === State.NORMAL)
-                    .sort((a, b) =>
-                      viewStore.state.orderByTimeAsc
+                    .sort((a, b) => {
+                      // First, sort by pinned status (pinned memos first)
+                      if (a.pinned !== b.pinned) {
+                        return b.pinned ? 1 : -1;
+                      }
+                      // Then sort by display time
+                      return viewStore.state.orderByTimeAsc
                         ? dayjs(a.displayTime).unix() - dayjs(b.displayTime).unix()
-                        : dayjs(b.displayTime).unix() - dayjs(a.displayTime).unix(),
-                    )
+                        : dayjs(b.displayTime).unix() - dayjs(a.displayTime).unix();
+                    })
                 }
-                orderBy={viewStore.state.orderByTimeAsc ? "display_time asc" : "display_time desc"}
+                orderBy={viewStore.state.orderByTimeAsc ? "pinned desc, display_time asc" : "pinned desc, display_time desc"}
                 filter={memoFilter}
               />
             </>

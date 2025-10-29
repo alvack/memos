@@ -106,11 +106,16 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		order = "ASC"
 	}
 	orderBy := []string{}
+	if find.OrderByPinned {
+		orderBy = append(orderBy, "`pinned` DESC")
+	}
 	if find.OrderByUpdatedTs {
 		orderBy = append(orderBy, "`updated_ts` "+order)
 	} else {
 		orderBy = append(orderBy, "`created_ts` "+order)
 	}
+	// Add id as final tie-breaker
+	orderBy = append(orderBy, "`id` DESC")
 	fields := []string{
 		"`memo`.`id` AS `id`",
 		"`memo`.`uid` AS `uid`",
