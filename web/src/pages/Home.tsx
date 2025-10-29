@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { observer } from "mobx-react-lite";
+import { useMemo } from "react";
 import { MemoRenderContext } from "@/components/MasonryView";
 import MemoView from "@/components/MemoView";
 import PagedMemoList from "@/components/PagedMemoList";
@@ -14,8 +15,8 @@ import { WorkspaceSetting_Key } from "@/types/proto/api/v1/workspace_service";
 const Home = observer(() => {
   const user = useCurrentUser();
 
-  // Build filter from active filters - no useMemo needed since component is MobX observer
-  const buildMemoFilter = () => {
+  // Build filter from active filters - using useMemo for performance
+  const memoFilter = useMemo(() => {
     const conditions = [`creator_id == ${extractUserIdFromName(user.name)}`];
     for (const filter of memoFilterStore.filters) {
       if (filter.factor === "contentSearch") {

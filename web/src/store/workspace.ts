@@ -243,17 +243,7 @@ export const initialWorkspaceStore = async (): Promise<void> => {
     // Fetch workspace profile
     const workspaceProfile = await workspaceStore.fetchWorkspaceProfile();
 
-<<<<<<< HEAD
-  const workspaceGeneralSetting = workspaceStore.state.generalSetting;
-  const workspaceLocale = workspaceGeneralSetting.customProfile?.locale;
-  console.log("Workspace initial setting - workspaceLocale from DB:", workspaceLocale);
-  console.log("Workspace initial setting - customProfile:", workspaceGeneralSetting.customProfile);
-  workspaceStore.state.setPartial({
-    locale: workspaceLocale || "zh-Hans",
-    theme: "default",
-    profile: workspaceProfile,
-  });
-  // Fetch required settings
+    // Fetch required settings
     await Promise.all([
       workspaceStore.fetchWorkspaceSetting(WorkspaceSetting_Key.GENERAL),
       workspaceStore.fetchWorkspaceSetting(WorkspaceSetting_Key.MEMO_RELATED),

@@ -449,7 +449,7 @@ func (s *APIV1Service) createAIMemo(ctx context.Context, userID int32, summary s
 	}
 
 	// Rebuild payload to extract tags and properties
-	if err := memopayload.RebuildMemoPayload(create); err != nil {
+	if err := memopayload.RebuildMemoPayload(create, s.MarkdownService); err != nil {
 		return nil, errors.Wrap(err, "failed to rebuild memo payload")
 	}
 

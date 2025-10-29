@@ -9,7 +9,12 @@
       "Bash(sed:*)",
       "Bash(cat:*)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(go env:*)",
+      "Bash(go clean:*)",
+      "Bash(powershell:*)",
+      "Bash(where go)",
+      "Bash(set:*)"
     ],
     "deny": [],
     "ask": []

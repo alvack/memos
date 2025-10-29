@@ -205,15 +205,6 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
               <TooltipContent>{t(`memo.visibility.${convertVisibilityToString(memo.visibility).toLowerCase()}` as any)}</TooltipContent>
             </Tooltip>
           )}
-            <Tooltip>
-              <TooltipTrigger>
-                <span className="flex justify-center items-center rounded-md hover:opacity-80">
-                  <VisibilityIcon visibility={memo.visibility} />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{t(`memo.visibility.${convertVisibilityToString(memo.visibility).toLowerCase()}` as any)}</TooltipContent>
-            </Tooltip>
-          )}
           {props.showPinned && memo.pinned && (
             <TooltipProvider>
               <Tooltip>
