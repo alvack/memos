@@ -12,16 +12,39 @@ import { initialUserStore } from "./store/user";
 import { initialWorkspaceStore } from "./store/workspace";
 import { applyThemeEarly } from "./utils/theme";
 import "leaflet/dist/leaflet.css";
+// PWA imports
+import { usePWA } from "./hooks/usePWA";
+import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
+import OfflinePage from "./components/OfflinePage";
 
 // Apply theme early to prevent flash of wrong theme
 applyThemeEarly();
 
-const Main = observer(() => (
-  <>
-    <RouterProvider router={router} />
-    <Toaster position="top-right" />
-  </>
-));
+const Main = observer(() => {
+  const { isOnline, needsRefresh, updateServiceWorker, waitingServiceWorker } = usePWA();
+
+  // Show offline page when offline
+  if (!isOnline) {
+    return (
+      <>
+        <OfflinePage />
+        <Toaster position="top-right" />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <RouterProvider router={router} />
+      <PWAUpdatePrompt
+        needsRefresh={needsRefresh}
+        updateServiceWorker={updateServiceWorker}
+        waitingServiceWorker={waitingServiceWorker}
+      />
+      <Toaster position="top-right" />
+    </>
+  );
+});
 
 (async () => {
   await initialWorkspaceStore();

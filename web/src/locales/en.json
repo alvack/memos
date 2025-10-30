@@ -537,5 +537,38 @@
     "select-visibility": "Visibility",
     "tags": "Tags",
     "upload-attachment": "Upload Attachment(s)"
+  },
+  "offline": {
+    "title": "Offline Mode",
+    "description": "You are currently offline. Some features may not be available.",
+    "available": "Still Available",
+    "unavailable": "Temporarily Unavailable",
+    "view-notes": "View cached notes",
+    "create-notes": "Create new notes (will sync when online)",
+    "browse": "Browse cached content",
+    "sync": "Data synchronization",
+    "new-content": "Load new content",
+    "upload": "Upload files",
+    "retry": "Reconnect"
+  },
+  "pwa": {
+    "install-available": "Install Available",
+    "update-available": "Update Available",
+    "install-title": "Install Memos App",
+    "install-description": "Install the app on your device for a better experience.",
+    "install-button": "Install App",
+    "installing": "Installing...",
+    "install-accepted": "Installation accepted!",
+    "install-error": "Installation failed, please try again",
+    "installed": "App installed on your device!",
+    "update-title": "App Update Available",
+    "update-description": "New version includes performance improvements and bug fixes.",
+    "update-button": "Update Now",
+    "updated": "App updated successfully!",
+    "update-error": "Update failed, please refresh the page"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "later": "Later"
   }
 }

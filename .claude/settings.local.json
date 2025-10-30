@@ -14,7 +14,11 @@
       "Bash(go clean:*)",
       "Bash(powershell:*)",
       "Bash(where go)",
-      "Bash(set:*)"
+      "Bash(set:*)",
+      "mcp__context7__get-library-docs",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm release)"
     ],
     "deny": [],
     "ask": []
